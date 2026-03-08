@@ -62,30 +62,30 @@ function App() {
 
   return (
     <div className="App">
-      <h1>My Database Tasks</h1>
+      <h1>MY DATABASE TASKS</h1>
       
       {/* ---> THIS IS THE MISSING FORM I ADDED <--- */}
-      <form onSubmit={handleAddTask} style={{ marginBottom: '20px' }}>
+      <form onSubmit={handleAddTask} className="task-form">
         <input
           type="text"
-          placeholder="Enter a new task..."
+          className="task-input"
+          placeholder="What do you need to do?"
           value={newTaskTitle}
           onChange={(e) => setNewTaskTitle(e.target.value)}
-          style={{ padding: '8px', marginRight: '10px', width: '250px' }}
         />
-        <button type="submit" style={{ padding: '8px 16px' }}>Add Task</button>
+        <button type="submit" className="task-button">Add Task</button>
       </form>
       {/* ------------------------------------------- */}
 
       <div className="task-list">
         {/* 4. Loop through the array of tasks and display each one */}
         {tasks.length === 0 ? (
-          <p>No tasks found. Is the backend running?</p>
+          <p className="empty-state">No tasks found. Add a task above to get started!</p>
         ) : (
           tasks.map((task) => (
             <div key={task.id} className="task-card">
               <h3>{task.title}</h3>
-              <p>Status: <strong>{task.status}</strong></p>
+              <p>Status: <strong className={`status-${task.status ? task.status.toLowerCase() : 'pending'}`}>{task.status}</strong></p>
             </div>
           ))
         )}
