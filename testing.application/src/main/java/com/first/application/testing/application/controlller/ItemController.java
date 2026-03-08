@@ -3,9 +3,7 @@ package com.first.application.testing.application.controlller;
 import com.first.application.testing.application.entity.Item;
 import com.first.application.testing.application.service.ItemService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 // Marks this class as a RESTful web service controller
@@ -23,5 +21,25 @@ public class ItemController {
     public List<Item> getAllItems() {
         // When your React app hits GET /api/items, this runs!
         return itemService.getAllItems();
+    }
+
+    @GetMapping("/{id}")
+    public Item getItemById(@PathVariable Long id) {
+        return itemService.getItemById(id);
+    }
+
+    @PostMapping
+    public Item createItem(@RequestBody Item item) {
+        return itemService.createItem(item);
+    }
+
+    @PutMapping("/{id}")
+    public Item updateItem(@PathVariable Long id, @RequestBody Item itemDetails) {
+        return itemService.updateItem(id, itemDetails);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteItem(@PathVariable Long id) {
+        itemService.deleteItem(id);
     }
 }

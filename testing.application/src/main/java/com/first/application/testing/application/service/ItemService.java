@@ -17,4 +17,25 @@ public class ItemService {
         // Fetches all records from your PostgreSQL table
         return itemRepository.findAll();
     }
+
+    public Item getItemById(Long id) {
+        return itemRepository.findById(id).orElse(null);
+    }
+
+    public Item createItem(Item item) {
+        return itemRepository.save(item);
+    }
+
+    public Item updateItem(Long id, Item itemDetails) {
+        Item item = itemRepository.findById(id).orElse(null);
+        if (item != null) {
+            item.setName(itemDetails.getName());
+            return itemRepository.save(item);
+        }
+        return null;
+    }
+
+    public void deleteItem(Long id) {
+        itemRepository.deleteById(id);
+    }
 }

@@ -16,6 +16,8 @@ public class Task {
 
     private String title;
     private String status;
+    private Integer position;
+    private String dueDate;
 
     // Constructors
     public Task() {}
@@ -23,6 +25,7 @@ public class Task {
     public Task(String title, String status) {
         this.title = title;
         this.status = status;
+        this.position = 0;
     }
 
     public Long getId() {
@@ -47,6 +50,22 @@ public class Task {
 
     public String getStatus() {
         return status;
+    }
+
+    public Integer getPosition() {
+        return position;
+    }
+
+    public void setPosition(Integer position) {
+        this.position = position;
+    }
+
+    public String getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(String dueDate) {
+        this.dueDate = dueDate;
     }
 // Getters and Setters (omitted for brevity, but you must generate them)
 }

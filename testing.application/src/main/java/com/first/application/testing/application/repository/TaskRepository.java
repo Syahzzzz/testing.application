@@ -10,6 +10,11 @@ import java.util.List;
 
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
+    List<Task> findAllByOrderByPositionAsc();
+
+    @Query("SELECT COALESCE(MAX(t.position), 0) FROM Task t")
+    Integer findMaxPosition();
+
     // Spring Data JPA automatically provides basic CRUD operations (save, findAll, deleteById)
 
     // Here is how you use a custom JPQL query to find specific data

@@ -193,13 +193,14 @@
 /* Task List Styles */
 .task-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  justify-content: flex-start;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .task-card {
-  flex: 0 1 250px;
+  width: 100%;
   background: white;
   border-radius: 16px;
   padding: 1.5rem;
@@ -208,7 +209,6 @@
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
 }
 
 .task-card:hover {
@@ -268,4 +268,44 @@
   background: #ffffff;
   border-radius: 16px;
   border: 2px dashed #cbd5e1;
+}
+
+/* Action Buttons */
+.task-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.btn-toggle {
+  padding: 0.5rem 1rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  flex: 1;
+}
+
+.btn-toggle:hover {
+  background-color: #2563eb;
+}
+
+.btn-delete {
+  padding: 0.5rem 1rem;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-delete:hover {
+  background-color: #dc2626;
 }

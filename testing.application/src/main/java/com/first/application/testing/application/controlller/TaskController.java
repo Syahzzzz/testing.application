@@ -32,10 +32,33 @@ public class TaskController {
         return taskService.createTask(task);
     }
 
+    @PutMapping("/reorder")
+    public void reorderTasks(@RequestBody List<Long> taskIds) {
+        taskService.reorderTasks(taskIds);
+    }
+
     // Maps HTTP GET requests with a dynamic "status" path variable
     @GetMapping("/status/{status}")
     // Binds the method parameter to the path variable in the URI
     public List<Task> getTasksByStatus(@PathVariable String status) {
         return taskService.getTasksByStatus(status);
+    }
+
+    // Maps HTTP GET requests for a specific task ID
+    @GetMapping("/{id}")
+    public Task getTaskById(@PathVariable Long id) {
+        return taskService.getTaskById(id);
+    }
+
+    // Maps HTTP PUT requests for a specific task ID
+    @PutMapping("/{id}")
+    public Task updateTask(@PathVariable Long id, @RequestBody Task taskDetails) {
+        return taskService.updateTask(id, taskDetails);
+    }
+
+    // Maps HTTP DELETE requests for a specific task ID
+    @DeleteMapping("/{id}")
+    public void deleteTask(@PathVariable Long id) {
+        taskService.deleteTask(id);
     }
 }

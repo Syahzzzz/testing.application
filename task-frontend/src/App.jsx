@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, Link, useNavigate } from 'react-router-dom'
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import './App.css'
 
 function TasksPage() {
   const [tasks, setTasks] = useState([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDueDate, setNewTaskDueDate] = useState('');
   const navigate = useNavigate();
 
   // Fetch tasks on load
@@ -14,11 +16,8 @@ function TasksPage() {
 
   const fetchTasks = async () => {
     try {
-      // Make sure this URL matches your backend perfectly
       const response = await fetch('http://localhost:8081/api/tasks'); 
       const data = await response.json();
-      
-      // Save the fetched data into our React state
       setTasks(data);
     } catch (error) {
       console.error("Error fetching data: ", error);
@@ -26,38 +25,164 @@ function TasksPage() {
   };
 
   const handleAddTask = async (e) => {
-    e.preventDefault(); // Prevents the page from refreshing when you submit the form
+    e.preventDefault(); 
     
-    if (!newTaskTitle.trim()) return; // Stops the user from submitting empty tasks
+    if (!newTaskTitle.trim()) return;
 
-    // 1. Create the data payload
     const newTask = {
       title: newTaskTitle,
-      status: "PENDING" // We will set all new tasks to PENDING by default
+      dueDate: newTaskDueDate || null,
+      status: "PENDING"
     };
 
     try {
-      // 2. Send the POST request to Spring Boot
       const response = await fetch('http://localhost:8081/api/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(newTask) // Convert our JavaScript object to a JSON string
+        body: JSON.stringify(newTask)
       });
 
       if (response.ok) {
-        const savedTask = await response.json(); // Get the saved task (with its new ID) back from the database
-        
-        // 3. Update the UI to show the new task immediately
+        const savedTask = await response.json();
         setTasks([...tasks, savedTask]); 
-        
-        // 4. Clear out the input box
         setNewTaskTitle(''); 
+        setNewTaskDueDate('');
       }
     } catch (error) {
       console.error("Error saving task: ", error);
     }
+  };
+
+  const handleToggleStatus = async (task) => {
+    const newStatus = task.status === 'PENDING' ? 'COMPLETED' : 'PENDING';
+    const updatedTask = { ...task, status: newStatus };
+
+    try {
+      const response = await fetch(`http://localhost:8081/api/tasks/${task.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updatedTask)
+      });
+
+      if (response.ok) {
+        const savedTask = await response.json();
+        setTasks(tasks.map(t => t.id === task.id ? savedTask : t));
+      }
+    } catch (error) {
+      console.error("Error updating task: ", error);
+    }
+  };
+
+  const handleDeleteTask = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:8081/api/tasks/${id}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        setTasks(tasks.filter(task => task.id !== id));
+      }
+    } catch (error) {
+      console.error("Error deleting task: ", error);
+    }
+  };
+
+  const handleUpdateDueDate = async (task, newDueDate) => {
+    const updatedTask = { ...task, dueDate: newDueDate || null };
+
+    // Update UI optimistically
+    setTasks(tasks.map(t => t.id === task.id ? updatedTask : t));
+
+    try {
+      await fetch(`http://localhost:8081/api/tasks/${task.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updatedTask)
+      });
+    } catch (error) {
+      console.error("Error updating task date: ", error);
+    }
+  };
+
+  const handleOnDragEnd = async (result) => {
+    if (!result.destination) return;
+
+    // Only allow reordering within pending tasks for now
+    const pendingTasks = tasks.filter(t => t.status === 'PENDING');
+    const completedTasks = tasks.filter(t => t.status !== 'PENDING');
+
+    const [reorderedItem] = pendingTasks.splice(result.source.index, 1);
+    pendingTasks.splice(result.destination.index, 0, reorderedItem);
+
+    const newTasks = [...pendingTasks, ...completedTasks];
+    setTasks(newTasks);
+
+    try {
+      await fetch('http://localhost:8081/api/tasks/reorder', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newTasks.map(t => t.id))
+      });
+    } catch (error) {
+      console.error("Error reordering tasks: ", error);
+    }
+  };
+
+  const pendingTasks = tasks.filter(t => t.status === 'PENDING');
+  const completedTasks = tasks.filter(t => t.status === 'COMPLETED');
+
+  const renderTaskCard = (task, provided = null) => {
+    const isDraggable = !!provided;
+
+    return (
+      <div 
+        className="task-card"
+        ref={isDraggable ? provided.innerRef : null}
+        {...(isDraggable ? provided.draggableProps : {})}
+        {...(isDraggable ? provided.dragHandleProps : {})}
+        style={{
+          ...(isDraggable ? provided.draggableProps.style : {}),
+          userSelect: 'none',
+          opacity: task.status === 'COMPLETED' ? 0.7 : 1
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h3 style={{ textDecoration: task.status === 'COMPLETED' ? 'line-through' : 'none' }}>{task.title}</h3>
+          {isDraggable && (
+            <span style={{ cursor: 'grab', fontSize: '24px', color: '#888' }} title="Drag to reorder">
+              ☰
+            </span>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', margin: '0.5rem 0' }}>
+          <p style={{ margin: 0 }}>Status: <strong className={`status-${task.status ? task.status.toLowerCase() : 'pending'}`}>{task.status}</strong></p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <label style={{ fontSize: '0.9rem', color: '#64748b' }}>Due:</label>
+            <input 
+              type="date" 
+              value={task.dueDate || ''} 
+              onChange={(e) => handleUpdateDueDate(task, e.target.value)}
+              style={{ border: '1px solid #cbd5e1', borderRadius: '4px', padding: '0.2rem', color: '#475569' }}
+            />
+          </div>
+        </div>
+        <div className="task-actions">
+          <button onClick={() => handleToggleStatus(task)} className="btn-toggle">
+            Mark {task.status === 'PENDING' ? 'Completed' : 'Pending'}
+          </button>
+          <button onClick={() => handleDeleteTask(task.id)} className="btn-delete">
+            Delete
+          </button>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -77,19 +202,48 @@ function TasksPage() {
           value={newTaskTitle}
           onChange={(e) => setNewTaskTitle(e.target.value)}
         />
+        <input
+          type="date"
+          className="task-input"
+          style={{ flex: '0.4' }}
+          value={newTaskDueDate}
+          onChange={(e) => setNewTaskDueDate(e.target.value)}
+        />
         <button type="submit" className="task-button">Add Task</button>
       </form>
 
-      <div className="task-list">
-        {tasks.length === 0 ? (
-          <p className="empty-state">No tasks found. Add a task above to get started!</p>
-        ) : (
-          tasks.map((task) => (
-            <div key={task.id} className="task-card">
-              <h3>{task.title}</h3>
-              <p>Status: <strong className={`status-${task.status ? task.status.toLowerCase() : 'pending'}`}>{task.status}</strong></p>
+      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <h2 style={{ color: '#1e293b', marginBottom: '1rem' }}>Pending Tasks</h2>
+        <DragDropContext onDragEnd={handleOnDragEnd}>
+          <Droppable droppableId="pending-tasks">
+            {(provided) => (
+              <div className="task-list" {...provided.droppableProps} ref={provided.innerRef} style={{ minHeight: '50px' }}>
+                {pendingTasks.length === 0 ? (
+                  <p className="empty-state" style={{ padding: '2rem' }}>No pending tasks!</p>
+                ) : (
+                  pendingTasks.map((task, index) => (
+                    <Draggable key={task.id.toString()} draggableId={task.id.toString()} index={index}>
+                      {(provided) => renderTaskCard(task, provided)}
+                    </Draggable>
+                  ))
+                )}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+
+        {completedTasks.length > 0 && (
+          <div style={{ marginTop: '3rem' }}>
+            <h2 style={{ color: '#1e293b', marginBottom: '1rem' }}>Completed Tasks</h2>
+            <div className="task-list">
+              {completedTasks.map((task) => (
+                <div key={task.id.toString()}>
+                  {renderTaskCard(task)}
+                </div>
+              ))}
             </div>
-          ))
+          </div>
         )}
       </div>
     </div>
