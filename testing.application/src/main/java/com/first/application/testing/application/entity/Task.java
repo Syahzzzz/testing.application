@@ -2,11 +2,15 @@ package com.first.application.testing.application.entity;
 
 import jakarta.persistence.*;
 
+// Indicates that this class is a JPA entity mapped to a database table
 @Entity
+// Specifies the exact name of the database table for this entity
 @Table(name = "tasks")
 public class Task {
 
+    // Denotes the primary key of the entity
     @Id
+    // Configures auto-increment for the primary key column
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 

@@ -7,9 +7,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+// Marks this class as a Spring Service, a type of component that holds business logic
 @Service
 public class TaskService {
 
+    // Injects the TaskRepository dependency automatically by Spring
     @Autowired
     private TaskRepository taskRepository;
 
